@@ -16,6 +16,8 @@ func Register(s *server.MCPServer, client *outline.Client) {
 	registerListCollections(s, client)
 	registerListDocuments(s, client)
 	registerCreateDocument(s, client)
+	registerCreateCollection(s, client)
+	registerSearchDocumentTitles(s, client)
 }
 
 func registerSearchDocuments(s *server.MCPServer, client *outline.Client) {
@@ -109,5 +111,39 @@ func registerCreateDocument(s *server.MCPServer, client *outline.Client) {
 			"Document created!\nID:    %s\nTitle: %s\nURL:   %s",
 			result.Data.ID, result.Data.Title, result.Data.URL,
 		)), nil
+	})
+}
+
+func registerCreateCollection(s *server.MCPServer, client *outline.Client) {
+	tool := mcp.NewTool("create_collection",
+		mcp.WithDescription("Create a new collection in Outline"),
+		mcp.WithString("name", mcp.Required(), mcp.Description("Name of the new collection")),
+	)
+	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		name, _ := req.Params.Arguments["name"].(string)
+		result, err := client.CreateCollection(name)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return mcp.NewToolResultText(fmt.Sprintf(
+			"Collection created!\nID:   %s\nName: %s\nURL:  %s",
+			result.Data.ID, result.Data.Name, result.Data.URL,
+		)), nil
+	})
+}
+
+func registerSearchDocumentTitles(s *server.MCPServer, client *outline.Client) {
+	tool := mcp.NewTool("search_document_titles",
+		mcp.WithDescription("Search documents by title keyword in Outline"),
+		mcp.WithString("query", mcp.Required(), mcp.Description("The title search query")),
+	)
+	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		query, _ := req.Params.Arguments["query"].(string)
+		result, err := client.SearchDocumentTitles(query)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		out, _ := json.MarshalIndent(result.Data, "", "  ")
+		return mcp.NewToolResultText(string(out)), nil
 	})
 }

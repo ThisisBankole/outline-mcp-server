@@ -143,3 +143,20 @@ func (c *Client) CreateDocument(title, text, collectionID string, publish bool) 
 	}, &result)
 	return &result, err
 }
+
+// SearchDocumentTitles - search by title keyword
+type SearchTitlesResult struct {
+    Data []struct {
+        ID           string `json:"id"`
+        Title        string `json:"title"`
+        URL          string `json:"url"`
+        CollectionID string `json:"collectionId"`
+        UpdatedAt    string `json:"updatedAt"`
+    } `json:"data"`
+}
+
+func (c *Client) SearchDocumentTitles(query string) (*SearchTitlesResult, error) {
+    var result SearchTitlesResult
+    err := c.post("/documents.search_titles", map[string]any{"query": query}, &result)
+    return &result, err
+}
