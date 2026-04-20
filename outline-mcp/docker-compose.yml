@@ -1,0 +1,15 @@
+services:
+  outline-mcp:
+    image: outline-mcp:latest
+    container_name: outline-mcp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "9292:9292"
+    environment:
+      - OUTLINE_BASE_URL=${OUTLINE_BASE_URL}
+      - OUTLINE_API_TOKEN=${OUTLINE_API_TOKEN}
+      - MCP_BEARER_TOKEN=${MCP_BEARER_TOKEN}
+      - PORT=9292

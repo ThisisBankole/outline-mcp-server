@@ -7,7 +7,7 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/yourusername/outline-mcp/internal/outline"
+	"github.com/ThisisBankole/outline-mcp-server/outline-mcp/internal/outline"
 )
 
 func Register(s *server.MCPServer, client *outline.Client) {
@@ -27,11 +27,11 @@ func registerSearchDocuments(s *server.MCPServer, client *outline.Client) {
 		mcp.WithNumber("limit", mcp.Description("Max results to return (default 10)")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		query, _ := req.Params.Arguments["query"].(string)
-		limit := 10
-		if l, ok := req.Params.Arguments["limit"].(float64); ok && l > 0 {
-			limit = int(l)
+		query, err := req.RequireString("query")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
+		limit := int(req.GetFloat("limit", 10))
 		result, err := client.SearchDocuments(query, limit)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -47,7 +47,10 @@ func registerGetDocument(s *server.MCPServer, client *outline.Client) {
 		mcp.WithString("id", mcp.Required(), mcp.Description("The document UUID")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		id, _ := req.Params.Arguments["id"].(string)
+		id, err := req.RequireString("id")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		result, err := client.GetDocument(id)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -77,7 +80,10 @@ func registerListDocuments(s *server.MCPServer, client *outline.Client) {
 		mcp.WithString("collection_id", mcp.Required(), mcp.Description("The collection UUID")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		collectionID, _ := req.Params.Arguments["collection_id"].(string)
+		collectionID, err := req.RequireString("collection_id")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		result, err := client.ListDocuments(collectionID)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -96,13 +102,19 @@ func registerCreateDocument(s *server.MCPServer, client *outline.Client) {
 		mcp.WithBoolean("publish", mcp.Description("Whether to publish immediately (default true)")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		title, _ := req.Params.Arguments["title"].(string)
-		text, _ := req.Params.Arguments["text"].(string)
-		collectionID, _ := req.Params.Arguments["collection_id"].(string)
-		publish := true
-		if p, ok := req.Params.Arguments["publish"].(bool); ok {
-			publish = p
+		title, err := req.RequireString("title")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
+		text, err := req.RequireString("text")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		collectionID, err := req.RequireString("collection_id")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		publish := req.GetBool("publish", true)
 		result, err := client.CreateDocument(title, text, collectionID, publish)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -120,7 +132,10 @@ func registerCreateCollection(s *server.MCPServer, client *outline.Client) {
 		mcp.WithString("name", mcp.Required(), mcp.Description("Name of the new collection")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		name, _ := req.Params.Arguments["name"].(string)
+		name, err := req.RequireString("name")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		result, err := client.CreateCollection(name)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -138,7 +153,10 @@ func registerSearchDocumentTitles(s *server.MCPServer, client *outline.Client) {
 		mcp.WithString("query", mcp.Required(), mcp.Description("The title search query")),
 	)
 	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-		query, _ := req.Params.Arguments["query"].(string)
+		query, err := req.RequireString("query")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
 		result, err := client.SearchDocumentTitles(query)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil

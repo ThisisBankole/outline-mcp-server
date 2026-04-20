@@ -1,16 +1,15 @@
 package main
 
-import (
-	"fmt"
+import (	
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/yourusername/outline-mcp/config"
-	"github.com/yourusername/outline-mcp/internal/outline"
-	"github.com/yourusername/outline-mcp/internal/tools"
+	"github.com/ThisisBankole/outline-mcp-server/outline-mcp/config"
+	"github.com/ThisisBankole/outline-mcp-server/outline-mcp/internal/outline"
+	"github.com/ThisisBankole/outline-mcp-server/outline-mcp/internal/tools"
 )
 
 func main() {
@@ -31,11 +30,9 @@ func main() {
 
 	tools.Register(mcpServer, outlineClient)
 
-	sseHandler := server.NewSSEServer(mcpServer,
-		server.WithBaseURL(fmt.Sprintf("http://localhost:%s", cfg.Port)),
-	)
+	streamHandler := server.NewStreamableHTTPServer(mcpServer)
 
-	http.Handle("/", authMiddleware(cfg.MCPBearerToken, sseHandler))
+	http.Handle("/mcp", streamHandler)
 
 	addr := ":" + cfg.Port
 	log.Printf("outline-mcp listening on %s", addr)
