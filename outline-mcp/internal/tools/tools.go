@@ -18,6 +18,7 @@ func Register(s *server.MCPServer, client *outline.Client) {
 	registerCreateDocument(s, client)
 	registerCreateCollection(s, client)
 	registerSearchDocumentTitles(s, client)
+	registerUpdateDocument(s, client)
 }
 
 func registerSearchDocuments(s *server.MCPServer, client *outline.Client) {
@@ -163,5 +164,33 @@ func registerSearchDocumentTitles(s *server.MCPServer, client *outline.Client) {
 		}
 		out, _ := json.MarshalIndent(result.Data, "", "  ")
 		return mcp.NewToolResultText(string(out)), nil
+	})
+}
+
+func registerUpdateDocument(s *server.MCPServer, client *outline.Client) {
+	tool := mcp.NewTool("update_document",
+		mcp.WithDescription("Update the title and/or body of an existing Outline document by its UUID"),
+		mcp.WithString("id", mcp.Required(), mcp.Description("The UUID of the document to update")),
+		mcp.WithString("title", mcp.Description("New title. Pass empty string to leave unchanged.")),
+		mcp.WithString("text", mcp.Description("New Markdown body. Pass empty string to leave unchanged.")),
+		mcp.WithBoolean("publish", mcp.Description("Whether to publish after updating (default true)")),
+	)
+	s.AddTool(tool, func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		id, err := req.RequireString("id")
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		title := req.GetString("title", "")
+		text := req.GetString("text", "")
+		publish := req.GetBool("publish", true)
+
+		result, err := client.UpdateDocument(id, title, text, publish)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return mcp.NewToolResultText(fmt.Sprintf(
+			"Document updated!\nID:    %s\nTitle: %s\nURL:   %s",
+			result.Data.ID, result.Data.Title, result.Data.URL,
+		)), nil
 	})
 }

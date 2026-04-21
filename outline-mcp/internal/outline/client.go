@@ -160,3 +160,25 @@ func (c *Client) SearchDocumentTitles(query string) (*SearchTitlesResult, error)
     err := c.post("/documents.search_titles", map[string]any{"query": query}, &result)
     return &result, err
 }
+
+// UpdateDocument updates the title and/or body of an existing document by its UUID.
+
+type UpdateDocumentResult struct {
+	Data struct {
+		ID    string `json:"id"`
+		Title string `json:"title"`
+		URL   string `json:"url"`
+		Text  string `json:"text"`
+	} `json:"data"`
+}
+
+func (c *Client) UpdateDocument(id, title, text string, publish bool) (*UpdateDocumentResult, error) {
+	var result UpdateDocumentResult
+	err := c.post("/documents.update", map[string]any{
+		"id":      id,
+		"title":   title,
+		"text":    text,
+		"publish": publish,
+	}, &result)
+	return &result, err
+}
